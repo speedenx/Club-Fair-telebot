@@ -5,7 +5,7 @@ Simple Telegram bot for collecting stamps from station QR codes.
 ## Install
 
 1. Install Python 3.
-2. Install the Telegram bot library:
+2. Install the Telegram bot library: (better option: alternatively run pip install -r requirements.txt)
 
 ```bash
 pip install python-telegram-bot
