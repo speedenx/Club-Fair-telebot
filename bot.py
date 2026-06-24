@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
 # Load environment variables
 load_dotenv()
@@ -57,6 +57,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stamps = "\n".join(f"✅ {s}" for s in sorted(user_stamps[user_id]))
         await update.message.reply_text(f"Welcome back! Here is your current progress:\n\n{stamps}")
 
+async def emoji_stamp(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.strip() if update.message and update.message.text else ""
+    if not text:
+        return
+
+    heart_variants = {
+        "❤️",
+        "♥️",
+        "♥",
+        "💛",
+        "💚",
+        "💙",
+        "💜",
+        "🖤",
+        "💗",
+        "💖",
+        "💘",
+        "💝",
+        "💓",
+        "💕",
+        "❣️",
+    }
+
+    if text in heart_variants:
+        await update.message.reply_text(text)
+
 if __name__ == "__main__":
     if not TOKEN:
         print("Error: TELEGRAM_BOT_TOKEN is missing.")
@@ -64,4 +90,5 @@ if __name__ == "__main__":
         print("Bot is starting up and ready to collect stamps...")
         app = Application.builder().token(TOKEN).build()
         app.add_handler(CommandHandler("start", start))
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, emoji_stamp))
         app.run_polling()
