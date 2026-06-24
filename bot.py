@@ -6,11 +6,15 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 # Load environment variables
 load_dotenv()
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+HEART_PASSWORD = os.getenv("HEART_PASSWORD", "heart")
 
 user_stamps = {}
+pending_password_requests = set()
 
 # Define the exact stations that are allowed to give stamps
 VALID_STATIONS = {"station_1", "station_2"}
+HEART_CODE_STAMP = "heart"
+HEART_EMOJI = "❤️"
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
@@ -62,26 +66,31 @@ async def emoji_stamp(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not text:
         return
 
-    heart_variants = {
-        "❤️",
-        "♥️",
-        "♥",
-        "💛",
-        "💚",
-        "💙",
-        "💜",
-        "🖤",
-        "💗",
-        "💖",
-        "💘",
-        "💝",
-        "💓",
-        "💕",
-        "❣️",
-    }
+    user_id = update.effective_user.id
 
-    if text in heart_variants:
-        await update.message.reply_text(text)
+    if text == HEART_EMOJI:
+        pending_password_requests.add(user_id)
+        await update.message.reply_text(
+            "Nice! To claim the heart stamp, type the password in chat."
+        )
+        return
+
+    if user_id in pending_password_requests:
+        if text == HEART_PASSWORD:
+            if user_id not in user_stamps:
+                user_stamps[user_id] = set()
+
+            if HEART_CODE_STAMP in user_stamps[user_id]:
+                await update.message.reply_text("You already claimed the heart stamp!")
+            else:
+                user_stamps[user_id].add(HEART_CODE_STAMP)
+                await update.message.reply_text("✅ Heart stamp claimed! Nice job.")
+        else:
+            await update.message.reply_text(
+                "That password is incorrect. Send the heart emoji again to try again."
+            )
+        pending_password_requests.discard(user_id)
+        return
 
 if __name__ == "__main__":
     if not TOKEN:
